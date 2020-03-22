@@ -7,18 +7,37 @@ module.exports = function(app) {
     });
     
     app.post("/api/friends", function(req, res) {
-        // req.body hosts is equal to the JSON post sent from the user
-        // This works because of our body parsing middleware
-        var newFriend = req.body;
-      
-        // Using a RegEx Pattern to remove spaces from newCharacter
-        // You can read more about RegEx Patterns later https://www.regexbuddy.com/regex.html
-        newFriend.routeName = newFriend.name.replace(/\s+/g, "").toLowerCase();
-      
-        console.log(newFriend);
-      
-        characters.push(newFriend);
-      
-        res.json(newFriend);
+      var diffTotal = 0;
+      var match = {
+          name: "",
+          photo: "",
+          difference: 1000
+      };
+      var userInput = req.body
+      var userScores = userInput.scores
+      var answers = userScores.map(function(item) {
+          return parseInt(item, 10);
       });
+      userInput = {
+          name: req.body.name,
+          photo: req.body.photo,
+          scores: answers
+      };
+
+      var sum = answers.reduce((a, b) => a + b, 0);
+
+      for (var i = 0; i < friends.length; i++) {
+          diffTotal = 0;
+          var bmatchScore = friends[i].scores.reduce((a, b) => a + b, 0);
+          diffTotal += Math.abs(sum - bmatchScore);
+
+          if(diffTotal <= match.difference) {
+              match.name = friends[i].name;
+              match.photo = friends[i].photo;
+              match.difference = diffTotal;
+          }
+      }    
+      friends.push(userInput);
+      res.json(match);
+  });
 };
